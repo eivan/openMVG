@@ -276,7 +276,7 @@ bool EstimateTripletRelativeScale
         const size_t featIndexI = track_it.second;
         const Vec2 x = features_provider->feats_per_view.at(I)[featIndexI].coords().cast<double>();
 
-        obs[I] = std::move(Observation(x, featIndexI));
+        obs[I] = std::move(Observation(x, Mat2::Zero() /*TODO*/, featIndexI));
       }
       landmarks[tracks.first].obs = std::move(obs);
     }
@@ -556,8 +556,9 @@ bool Stellar_Solver::Optimize
           const IndexT view_idx = track_it.first;
           const IndexT feat_idx = track_it.second;
           const Vec2 x = features_provider_->feats_per_view.at(view_idx)[feat_idx].coords().cast<double>();
+          const Mat2 M = features_provider_->feats_per_view.at(view_idx)[feat_idx].shape().cast<double>();
 
-          obs[view_idx] = {x, feat_idx};
+          obs[view_idx] = {x, M, feat_idx};
         }
         return obs;
       }();

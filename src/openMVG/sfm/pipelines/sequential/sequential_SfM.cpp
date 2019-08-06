@@ -585,8 +585,8 @@ bool SequentialSfMReconstructionEngine::MakeInitialPair3D(const Pair & current_p
       TriangulateDLT(Pose_I.asMatrix(), (*cam_I)(cam_I->get_ud_pixel(x1)),
                      Pose_J.asMatrix(), (*cam_J)(cam_J->get_ud_pixel(x2)), &X);
       Observations obs;
-      obs[view_I->id_view] = Observation(x1, i);
-      obs[view_J->id_view] = Observation(x2, j);
+      obs[view_I->id_view] = Observation(x1, Mat2::Zero() /*TODO*/, i);
+      obs[view_J->id_view] = Observation(x2, Mat2::Zero() /*TODO*/, j);
       landmarks[track_iterator.first].obs = std::move(obs);
       landmarks[track_iterator.first].X = X;
     }
@@ -1173,6 +1173,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
           const IntrinsicBase * cam_J = sfm_data_.GetIntrinsics().at(view_J->id_intrinsic).get();
           const Pose3 pose_J = sfm_data_.GetPoseOrDie(view_J);
           const Vec2 xJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].coords().cast<double>();
+          const Mat2 MJ = features_provider_->feats_per_view.at(J)[allViews_of_track.at(J)].shape().cast<double>();
           const Vec2 xJ_ud = cam_J->get_ud_pixel(xJ);
 
           const Vec2 residual = cam_J->residual(pose_J(landmark.X), xJ);
@@ -1180,7 +1181,7 @@ bool SequentialSfMReconstructionEngine::Resection(const uint32_t viewIndex)
               && residual.norm() < std::max(4.0, map_ACThreshold_.at(J))
              )
           {
-            landmark.obs[J] = Observation(xJ, allViews_of_track.at(J));
+            landmark.obs[J] = Observation(xJ, MJ, allViews_of_track.at(J));
           }
         }
       }

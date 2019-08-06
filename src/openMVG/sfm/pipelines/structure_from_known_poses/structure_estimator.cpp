@@ -332,7 +332,8 @@ void SfM_Data_Structure_Estimation_From_Known_Poses::triangulate(
         const IndexT featIndex = track_obs.second;
         const std::shared_ptr<features::Regions> regions = regions_provider->get(imaIndex);
         const Vec2 pt = regions->GetRegionPosition(featIndex);
-        obs[imaIndex] = Observation(pt, featIndex);
+        const Mat2 M = regions->GetRegionShape(featIndex);
+        obs[imaIndex] = Observation(pt, M, featIndex);
       }
       Landmark landmark;
       if (structure_estimator.robust_triangulation(sfm_data, obs, landmark))

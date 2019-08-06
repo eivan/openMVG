@@ -123,7 +123,8 @@ int main(int argc, char ** argv)
         const auto & view_id = track_ids.first;
         const auto & feat_id = track_ids.second;
         const Vec2 x = feats_provider->feats_per_view[view_id][feat_id].coords().template cast<double>();
-        obs.insert({view_id, Observation(x, feat_id)});
+        const Mat2 M = feats_provider->feats_per_view[view_id][feat_id].shape().template cast<double>();
+        obs.insert({view_id, Observation(x, M, feat_id)});
       }
       sfm_data.structure[iterT.first].obs = std::move(obs);
     }

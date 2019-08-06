@@ -17,11 +17,14 @@
 namespace openMVG {
 namespace features {
 
-PointFeature::PointFeature(float x, float y): coords_(x, y) {}
+PointFeature::PointFeature(float x, float y): coords_(x, y), shape_(Mat2f::Zero()) {}
 
 float PointFeature::x() const { return coords_(0); }
 float PointFeature::y() const { return coords_(1); }
-const Vec2f & PointFeature::coords() const { return coords_;}
+const Vec2f & PointFeature::coords() const { return coords_; }
+
+Mat2f& PointFeature::shape() { return shape_; }
+const Mat2f& PointFeature::shape() const { return shape_; }
 
 float& PointFeature::x() { return coords_(0); }
 float& PointFeature::y() { return coords_(1); }
@@ -47,21 +50,16 @@ SIOPointFeature::SIOPointFeature
   float scale,
   float orient
 ):
-  PointFeature(x,y),
-  scale_(scale),
-  orientation_(orient)
+  PointFeature(x,y)
 {
-
+  shape_ = scale * Eigen::Rotation2D<float>(orient).matrix();
 }
 
-float SIOPointFeature::scale() const { return scale_; }
-float& SIOPointFeature::scale() { return scale_; }
-float SIOPointFeature::orientation() const { return orientation_; }
-float& SIOPointFeature::orientation() { return orientation_; }
+float SIOPointFeature::scale() const { return sqrt(shape().determinant()); }
+float SIOPointFeature::orientation() const { return atan2(shape()(1,0), shape()(0,0)); }
 
 bool SIOPointFeature::operator ==(const SIOPointFeature& b) const {
-  return (scale_ == b.scale()) &&
-         (orientation_ == b.orientation()) &&
+  return (shape_ == b.shape()) &&
          (x() == b.x()) && (y() == b.y());
 };
 
@@ -72,13 +70,15 @@ bool SIOPointFeature::operator !=(const SIOPointFeature& b) const {
 std::ostream& operator<<(std::ostream& out, const SIOPointFeature& obj)
 {
   const PointFeature *pf = static_cast<const PointFeature*>(&obj);
-  return out << *pf << " " << obj.scale_ << " " << obj.orientation_;
+  return out << *pf << " " << obj.scale() << " " << obj.orientation();
 }
 
 std::istream& operator>>(std::istream& in, SIOPointFeature& obj)
 {
   PointFeature *pf = static_cast<PointFeature*>(&obj);
-  return in >> *pf >> obj.scale_ >> obj.orientation_;
+  float scale_, orientation_;
+  return in >> *pf >> scale_ >> orientation_;
+  obj.shape_ = scale_ * Eigen::Rotation2D<float>(orientation_).matrix();
 }
 
 /// Return the coterminal angle between [0;2*PI].
@@ -103,8 +103,10 @@ AffineFeature::AffineFeature
   float m12,
   float m21,
   float m22
-) : PointFeature(x, y), M_((Mat2f() << m11, m12, m21, m22).finished())
-{}
+) : PointFeature(x, y)
+{
+  shape_ = (Mat2f() << m11, m12, m21, m22).finished();
+}
 
 bool AffineFeature::operator ==(const AffineFeature& b) const {
   return (x() == b.x() && y() == b.y() && M() == b.M());
@@ -125,14 +127,14 @@ void AffineFeature::decompose(float& angleInRadians, float& majoraxissize, float
 std::ostream& operator<<(std::ostream& out, const AffineFeature& rhs)
 {
   const PointFeature *pf = static_cast<const PointFeature*>(&rhs);
-  return out << *pf << " " << rhs.M_(0, 0) << " " << rhs.M_(0, 1) << " " << rhs.M_(1, 0)
-    << " " << rhs.M_(1, 1);
+  return out << *pf << " " << rhs.M()(0, 0) << " " << rhs.M()(0, 1) << " " << rhs.M()(1, 0)
+    << " " << rhs.M()(1, 1);
 }
 
 std::istream& operator>>(std::istream& in, AffineFeature& rhs)
 {
   PointFeature *pf = static_cast<PointFeature*>(&rhs);
-  return in >> *pf >> rhs.M_(0, 0) >> rhs.M_(0, 1) >> rhs.M_(1, 0) >> rhs.M_(1, 1);
+  return in >> *pf >> rhs.M()(0, 0) >> rhs.M()(0, 1) >> rhs.M()(1, 0) >> rhs.M()(1, 1);
 }
 
 } // namespace features

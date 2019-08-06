@@ -46,9 +46,11 @@ std::ofstream& writeDetector( std::ofstream& out, const openMVG::features::SIOPo
 
 std::ifstream& readDetector( std::ifstream& in, openMVG::features::SIOPointFeature& point )
 {
+  float scale_, orientation_;
   in >> point.x()
     >> point.y()
-    >> point.scale()
-    >> point.orientation();
+    >> scale_
+    >> orientation_;
+  point.shape() = scale_ * Eigen::Rotation2D<float>(orientation_).matrix();
   return in;
 }

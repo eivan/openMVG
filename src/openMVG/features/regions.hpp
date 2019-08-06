@@ -54,6 +54,7 @@ public:
   //-- Assume that a region can always be represented at least by a 2D positions
   virtual PointFeatures GetRegionsPositions() const = 0;
   virtual Vec2 GetRegionPosition(size_t i) const = 0;
+  virtual Mat2 GetRegionShape(size_t i) const = 0;
 
   /// Return the number of defined regions
   virtual size_t RegionCount() const = 0;

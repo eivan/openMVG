@@ -36,19 +36,29 @@ public:
   float x() const;
   float y() const;
   const Vec2f & coords() const;
+  Mat2f& shape();
+  const Mat2f& shape() const;
 
   float& x();
   float& y();
   Vec2f& coords();
 
   template<class Archive>
-  void serialize(Archive & ar)
+  void save(Archive& ar) const
   {
-    ar (coords_(0), coords_(1));
+    ar(coords_(0), coords_(1));
+  }
+
+  template<class Archive>
+  void load(Archive& ar)
+  {
+    ar(coords_(0), coords_(1));
+    shape_.setZero();
   }
 
 protected:
   Vec2f coords_;  // (x, y).
+  Mat2f shape_;
 };
 
 /**
@@ -69,26 +79,37 @@ public:
                   float scale=0.0f, float orient=0.0f);
 
   float scale() const;
-  float& scale();
   float orientation() const;
-  float& orientation();
 
   bool operator ==(const SIOPointFeature& b) const;
 
   bool operator !=(const SIOPointFeature& b) const;
 
-  template<class Archive>
+  /*template<class Archive>
   void serialize(Archive & ar)
   {
     ar (
       coords_(0), coords_(1),
       scale_,
       orientation_);
+  }*/
+
+  template <class Archive>
+  void save(Archive& ar) const
+  {
+    float scale_, orientation_;
+    scale_ = scale();
+    orientation_ = orientation();
+    ar(coords_(0), coords_(1), scale_, orientation_);
   }
 
-protected:
-  float scale_;        // In pixels.
-  float orientation_;  // In radians.
+  template <class Archive>
+  void load(Archive& ar)
+  {
+    float scale_, orientation_;
+    ar(coords_(0), coords_(1), scale_, orientation_);
+    shape_ = scale_ * Eigen::Rotation2D<float>(orientation_).matrix();
+  }
 };
 
 /// Return the coterminal angle between [0;2*PI].
@@ -124,23 +145,29 @@ public:
   bool operator !=(const AffineFeature& rhs) const;
 
   template<class Archive>
-  void serialize(Archive& ar)
+  void save(Archive& ar) const
   {
     ar(
       coords_(0), coords_(1),
-      M_(0, 0), M_(0, 1), M_(1, 0), M_(1, 1));
+      shape_(0, 0), shape_(0, 1), shape_(1, 0), shape_(1, 1));
+  }
+
+  template<class Archive>
+  void load(Archive& ar)
+  {
+    ar(
+      coords_(0), coords_(1),
+      shape_(0, 0), shape_(0, 1), shape_(1, 0), shape_(1, 1));
   }
 
   // inner_points_of_the_affine_feature = { M * v | v \in unit_circle }
-  Mat2f& M() { return M_; }
+  Mat2f& M() { return shape_; }
 
   // inner_points_of_the_affine_feature = { M * v | v \in unit_circle }
-  const Mat2f& M() const { return M_; }
+  const Mat2f& M() const { return shape_; }
 
   void decompose(float& angleInRadians, float& majoraxissize, float& minoraxissize) const;
 
-protected:
-  Mat2f M_;
 };
 
 /// Read feats from file

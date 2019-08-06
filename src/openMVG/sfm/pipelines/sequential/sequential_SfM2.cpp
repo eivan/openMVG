@@ -251,7 +251,8 @@ bool SequentialSfMReconstructionEngine2::InitTracksAndLandmarks()
         const auto & view_id = track_ids.first;
         const auto & feat_id = track_ids.second;
         const Vec2 x = features_provider_->feats_per_view[view_id][feat_id].coords().cast<double>();
-        obs.insert({view_id, Observation(x, feat_id)});
+        const Mat2 M = features_provider_->feats_per_view[view_id][feat_id].shape().cast<double>();
+        obs.insert({view_id, Observation(x, M, feat_id)});
       }
       landmarks_[iterT.first].obs = std::move(obs);
     }

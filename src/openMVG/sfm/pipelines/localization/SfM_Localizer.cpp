@@ -318,7 +318,7 @@ namespace sfm {
       const size_t idx = matching_data.vec_inliers[i];
       Landmark landmark;
       landmark.X = matching_data.pt3D.col(idx);
-      landmark.obs[0] = Observation(matching_data.pt2D.col(idx), UndefinedIndexT);
+      landmark.obs[0] = Observation(matching_data.pt2D.col(idx), Mat2::Zero() /*TODO*/, UndefinedIndexT);
       sfm_data.structure[i] = std::move(landmark);
     }
 

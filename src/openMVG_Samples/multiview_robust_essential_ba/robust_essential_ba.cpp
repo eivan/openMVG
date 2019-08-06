@@ -252,8 +252,8 @@ int main() {
           Depth(pose1.rotation(), pose1.translation(), X) < 0)
         continue;
       // Add a new landmark (3D point with it's 2d observations)
-      landmarks[i].obs[tiny_scene.views[0]->id_view] = Observation(LL.coords().cast<double>(), vec_PutativeMatches[relativePose_info.vec_inliers[i]].i_);
-      landmarks[i].obs[tiny_scene.views[1]->id_view] = Observation(RR.coords().cast<double>(), vec_PutativeMatches[relativePose_info.vec_inliers[i]].j_);
+      landmarks[i].obs[tiny_scene.views[0]->id_view] = Observation(LL.coords().cast<double>(), Mat2::Zero() /*TODO*/, vec_PutativeMatches[relativePose_info.vec_inliers[i]].i_);
+      landmarks[i].obs[tiny_scene.views[1]->id_view] = Observation(RR.coords().cast<double>(), Mat2::Zero() /*TODO*/, vec_PutativeMatches[relativePose_info.vec_inliers[i]].j_);
       landmarks[i].X = X;
     }
     Save(tiny_scene, "EssentialGeometry_start.ply", ESfM_Data(ALL));

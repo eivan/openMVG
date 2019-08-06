@@ -320,7 +320,7 @@ int main(int argc, char *argv[]) {
           if (angle < 0 || angle > 90)
             continue;
 
-          out_landmark.obs[local_view_index] = Observation(projection, feature_key);
+          out_landmark.obs[local_view_index] = Observation(projection, Mat2::Zero() /*TODO*/, feature_key);
           is_reprojection_found = true;
           break; // if one of the 6 views observe the 3D point, no other views from the 6 views should observe it
         } // end of looping 6 view of 1 pano image

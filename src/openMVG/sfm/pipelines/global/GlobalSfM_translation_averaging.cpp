@@ -744,7 +744,7 @@ bool GlobalSfM_Translation_AveragingSolver::Estimate_T_triplet
 
       // get feature
       const features::PointFeature & pt = features_provider->getFeatures(viewIndex)[featIndex];
-      obs[viewIndex] = Observation(pt.coords().cast<double>(), featIndex);
+      obs[viewIndex] = Observation(pt.coords().cast<double>(), Mat2::Zero() /*TODO*/, featIndex);
     }
   }
 

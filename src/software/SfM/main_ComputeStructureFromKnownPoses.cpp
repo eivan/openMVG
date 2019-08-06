@@ -235,8 +235,9 @@ int main(int argc, char **argv)
       {
         const auto imaIndex = track_it.first;
         const auto featIndex = track_it.second;
-        const Vec2 & pt = regions_provider->get(imaIndex)->GetRegionPosition(featIndex);
-        obs[imaIndex] = {pt, featIndex};
+        const Vec2& pt = regions_provider->get(imaIndex)->GetRegionPosition(featIndex);
+        const Mat2& M = regions_provider->get(imaIndex)->GetRegionShape(featIndex);
+        obs[imaIndex] = {pt, M, featIndex};
       }
       ++idx;
     }

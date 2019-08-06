@@ -78,6 +78,9 @@ inline bool Save_PLY
       << '\n' << "property double x"
       << '\n' << "property double y"
       << '\n' << "property double z"
+      << '\n' << "property double nx"
+      << '\n' << "property double ny"
+      << '\n' << "property double nz"
       << '\n' << "property uchar red"
       << '\n' << "property uchar green"
       << '\n' << "property uchar blue"
@@ -141,11 +144,15 @@ inline bool Save_PLY
               << iterLandmarks.second.X(0) << ' '
               << iterLandmarks.second.X(1) << ' '
               << iterLandmarks.second.X(2) << ' '
+              << iterLandmarks.second.N(0) << ' '
+              << iterLandmarks.second.N(1) << ' '
+              << iterLandmarks.second.N(2) << ' '
               << "255 255 255\n";
           }
           else
           {
             stream.write( reinterpret_cast<const char*> ( iterLandmarks.second.X.data() ), sizeof( Vec3 ) );
+            stream.write(reinterpret_cast<const char*> (iterLandmarks.second.N.data()), sizeof(Vec3));
             stream.write( reinterpret_cast<const char*> ( Vec3uc(255, 255, 255).data() ), sizeof( Vec3uc ) );
           }
         }
@@ -163,11 +170,15 @@ inline bool Save_PLY
               << iterGCP.second.X(0) << ' '
               << iterGCP.second.X(1) << ' '
               << iterGCP.second.X(2) << ' '
+              << iterGCP.second.N(0) << ' '
+              << iterGCP.second.N(1) << ' '
+              << iterGCP.second.N(2) << ' '
               << "255 0 0\n";
           }
           else
           {
             stream.write( reinterpret_cast<const char*> ( iterGCP.second.X.data() ), sizeof( Vec3 ) );
+            stream.write(reinterpret_cast<const char*> (iterGCP.second.N.data()), sizeof(Vec3));
             stream.write( reinterpret_cast<const char*> ( Vec3uc(255, 0, 0).data() ), sizeof( Vec3uc ) );
           }
         }

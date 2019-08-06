@@ -174,8 +174,10 @@ bool Relative_Pose_Engine::Relative_Pose_Engine::Process(
           Observations obs;
           const Vec2 obs_I = features_provider_->feats_per_view.at(I)[matches[k].i_].coords().cast<double>();
           const Vec2 obs_J = features_provider_->feats_per_view.at(J)[matches[k].j_].coords().cast<double>();
-          obs[view_I->id_view] = {obs_I, matches[k].i_};
-          obs[view_J->id_view] = {obs_J, matches[k].j_};
+          //const Mat2 obsM_I = features_provider_->feats_per_view.at(I)[matches[k].i_].shape().cast<double>();
+          //const Mat2 obsM_J = features_provider_->feats_per_view.at(J)[matches[k].j_].shape().cast<double>();
+          obs[view_I->id_view] = { obs_I, Mat2::Zero() /*TODO*/, matches[k].i_ };
+          obs[view_J->id_view] = { obs_J, Mat2::Zero() /*TODO*/, matches[k].j_};
           landmarks[k].obs = obs;
           landmarks[k].X = X;
         }

@@ -80,6 +80,11 @@ public:
     return Vec2f(vec_feats_[i].coords()).cast<double>();
   }
 
+  Mat2 GetRegionShape(size_t i) const override
+  {
+    return vec_feats_[i].shape().cast<double>();
+  }
+
   /// Return the number of defined regions
   size_t RegionCount() const override {return vec_feats_.size();}
 

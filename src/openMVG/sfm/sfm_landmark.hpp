@@ -18,9 +18,13 @@ namespace sfm {
 struct Observation
 {
   Observation():id_feat(UndefinedIndexT) {  }
-  Observation(const Vec2 & p, IndexT idFeat): x(p), id_feat(idFeat) {}
+  Observation(const Vec2& p, const Mat2& A, IndexT idFeat): x(p), M(A), id_feat(idFeat) {}
 
+  // 2D location of the observation (region centre)
   Vec2 x;
+  // 2D shape corresponding to the region
+  Mat2 M;
+
   IndexT id_feat;
 
   // Serialization
@@ -38,7 +42,12 @@ using Observations = Hash_Map<IndexT, Observation>;
 /// Define a landmark (a 3D point, with its 2d observations)
 struct Landmark
 {
+  // 3D location in space
   Vec3 X;
+  // Surface normal
+  Vec3 N;
+
+  // 2D observations
   Observations obs;
 
   // Serialization

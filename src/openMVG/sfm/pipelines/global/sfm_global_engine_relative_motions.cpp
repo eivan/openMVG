@@ -354,8 +354,8 @@ bool GlobalSfMReconstructionEngine_RelativeMotions::Compute_Initial_Structure
       {
         const size_t imaIndex = it->first;
         const size_t featIndex = it->second;
-        const PointFeature & pt = features_provider_->feats_per_view.at(imaIndex)[featIndex];
-        obs[imaIndex] = Observation(pt.coords().cast<double>(), featIndex);
+        const PointFeature& pt = features_provider_->feats_per_view.at(imaIndex)[featIndex];
+        obs[imaIndex] = Observation(pt.coords().cast<double>(), pt.shape().cast<double>(), featIndex);
       }
     }
 
