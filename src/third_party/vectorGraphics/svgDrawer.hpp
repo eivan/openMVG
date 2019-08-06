@@ -96,6 +96,28 @@ public:
       << " r=\"" << r << "\""
       << style.getSvgStream() + (style.bTooltip() ? "</circle>" : "/>\n");  }
 
+  void drawEllipse(float cx, float cy, float rx, float ry,
+    const svgStyle& style) {
+    svgStream << "<ellipse cx=\"" << cx << "\""
+      << " cy=\"" << cy << "\""
+      << " rx=\"" << rx << "\""
+      << " ry=\"" << ry << "\""
+      << style.getSvgStream() +
+      (style.bTooltip() ? "</ellipse>" : "/>\n");
+  }
+
+  // NOTE: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform
+  void drawAffine(float cx, float cy, float rx, float ry, float a11, float a12,
+    float a21, float a22, const svgStyle& style,
+    bool draw_axes = true) {
+    svgStream << "<g transform = \"matrix(" << a11 << " " << a21 << " " << a12
+      << " " << a22 << " " << cx << " " << cy << ")\">" << std::endl;
+
+    drawEllipse(0, 0, rx, ry, style);
+
+    svgStream << std::endl << "</g>" << std::endl;
+  }
+
   ///Line draw -> start and end point
   void drawLine(float ax, float ay, float bx, float by,
     const svgStyle & style)

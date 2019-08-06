@@ -11,6 +11,8 @@
 
 #include "openMVG/features/akaze/image_describer_akaze_io.hpp"
 
+#include "openMVG/features/tbmr/image_describer_tbmr_io.hpp"
+
 #include "openMVG/features/sift/SIFT_Anatomy_Image_Describer_io.hpp"
 #include "openMVG/image/image_io.hpp"
 #include "openMVG/features/regions_factory_io.hpp"
@@ -208,6 +210,11 @@ int main(int argc, char **argv)
     {
       image_describer = AKAZE_Image_describer::create
         (AKAZE_Image_describer::Params(AKAZE::Params(), AKAZE_MLDB), !bUpRight);
+    }
+    if (sImage_Describer_Method == "TBMR_LIOP")
+    {
+      image_describer = TBMR_Image_describer::create
+        (TBMR_Image_describer::Params(TBMR_LIOP), !bUpRight);
     }
     if (!image_describer)
     {

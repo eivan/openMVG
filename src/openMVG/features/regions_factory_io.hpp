@@ -26,4 +26,7 @@ CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::featur
 CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::AKAZE_Binary_Regions, "AKAZE_Binary_Regions");
 CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::AKAZE_Binary_Regions)
 
+CEREAL_REGISTER_TYPE_WITH_NAME(openMVG::features::TBMR_Liop_Regions, "TBMR_Liop_Regions");
+CEREAL_REGISTER_POLYMORPHIC_RELATION(openMVG::features::Regions, openMVG::features::TBMR_Liop_Regions)
+
 #endif // OPENMVG_FEATURES_REGIONS_FACTORY_IO_HPP

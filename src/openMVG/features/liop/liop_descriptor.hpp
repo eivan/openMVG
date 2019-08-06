@@ -22,6 +22,7 @@
 
 
 namespace openMVG { namespace features { class SIOPointFeature; } }
+namespace openMVG { namespace features { class AffineFeature; } }
 namespace openMVG { namespace image { template <typename T> class Image; } }
 
 #include <map>
@@ -43,6 +44,10 @@ public:
   void extract(
     const image::Image<unsigned char> & I,
     const SIOPointFeature & feat,
+    float desc[144]);
+
+  void extract_affine(const image::Image<float>& I,
+    const AffineFeature& feat,
     float desc[144]);
 
   void CreateLIOP_GOrder(

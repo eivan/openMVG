@@ -23,6 +23,8 @@
 #include "openMVG/image/image_filtering.hpp"
 #include "openMVG/image/sample.hpp"
 
+#include "openMVG/image/image_resampling.hpp"
+
 #include <limits>
 
 namespace openMVG {
@@ -354,6 +356,62 @@ void Liop_Descriptor_Extractor::extract(
 
   //b. creation of the LIOP ordering
   const int inRadius = scalePatchWidth/2;
+  CreateLIOP_GOrder(outPatch, flagPatch, inRadius, desc);
+}
+
+void Liop_Descriptor_Extractor::extract_affine(const image::Image<float>& I,
+  const AffineFeature& feat,
+  float desc[144]) {
+  memset(desc, 0, sizeof(float) * 144);
+
+  // a. extract the local patch
+  const int scalePatchWidth = 31;
+
+  const int outPatchWidth = scalePatchWidth + 6;
+  const int outRadius = outPatchWidth / 2;
+  const int outRadius2 = outRadius * outRadius;
+
+  image::Image<float> outPatch(outPatchWidth, outPatchWidth, true, 0);
+  image::Image<unsigned char> flagPatch(outPatchWidth, outPatchWidth, true, 0);
+
+  const float sc = 2.f * 3.f / static_cast<float>(outPatchWidth);
+  const Mat2f A = feat.M() * sc;
+
+  const float half_width = static_cast<float>(outPatchWidth) / 2.f;
+
+  // Compute sampling grid
+  std::vector<std::pair<float, float>> sampling_grid;
+  sampling_grid.reserve(outPatchWidth * outPatchWidth);
+  for (int i = 0; i < outPatchWidth; ++i) {
+    for (int j = 0; j < outPatchWidth; ++j) {
+      // Apply transformation relative to the center of the patch (assume origin
+      // at 0,0 then map to (x,y) )
+      Vec2f pos;
+      pos << static_cast<float>(j) - half_width,
+        static_cast<float>(i) - half_width;
+      // Map (ie: ellipse transform)
+      const Vec2f affineAdapted = A * pos;
+
+      sampling_grid.emplace_back(affineAdapted(1) + feat.y(),
+        affineAdapted(0) + feat.x());
+
+      if (pos.squaredNorm() < outRadius2) {
+        //flagPatch_data[(y + outRadius) * outPatchWidth + x + outRadius] = 1;
+        flagPatch(j, i) = 1;
+      }
+    }
+  }
+
+  const image::Sampler2d<image::SamplerLinear> sampler;
+
+  // Sample input image to generate patch
+  image::GenericRessample(I, sampling_grid, outPatchWidth, outPatchWidth,
+    sampler, outPatch);
+
+  image::ImageGaussianFilter(image::Image<float>(outPatch), 1.2, outPatch);
+
+  // b. creation of the LIOP ordering
+  const int inRadius = scalePatchWidth / 2;
   CreateLIOP_GOrder(outPatch, flagPatch, inRadius, desc);
 }
 

@@ -8,6 +8,7 @@
 
 #include "openMVG/graph/graph.hpp"
 #include "openMVG/features/akaze/image_describer_akaze.hpp"
+#include "openMVG/features/tbmr/image_describer_tbmr.hpp"
 #include "openMVG/features/descriptor.hpp"
 #include "openMVG/features/feature.hpp"
 #include "openMVG/matching/indMatch.hpp"
