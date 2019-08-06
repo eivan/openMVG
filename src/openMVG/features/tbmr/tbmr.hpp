@@ -53,7 +53,7 @@ namespace tbmr
   void Extract_tbmr
   (
     const image::Image<unsigned char> & ima,
-    std::vector<features::AffinePointFeature> & features,
+    std::vector<features::AffineFeature> & features,
     Ordering cmp = Ordering(),
     const unsigned int minimumSize = 30,
     const double maximumRelativeSize = 0.01

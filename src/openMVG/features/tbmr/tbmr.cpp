@@ -13,6 +13,8 @@
 
 #include <numeric>
 
+#include <unsupported/Eigen/MatrixFunctions>
+
 namespace openMVG
 {
 namespace features
@@ -100,7 +102,7 @@ namespace tbmr
   void Extract_tbmr
   (
     const image::Image<unsigned char> & ima,
-    std::vector<features::AffinePointFeature> & features,
+    std::vector<features::AffineFeature> & features,
     std::less<unsigned char> cmp,
     const unsigned int minimumSize,
     const double maximumRelativeSize
@@ -111,7 +113,7 @@ namespace tbmr
   void Extract_tbmr
   (
     const image::Image<unsigned char> & ima,
-    std::vector<features::AffinePointFeature> & features,
+    std::vector<features::AffineFeature> & features,
     std::greater<unsigned char> cmp,
     const unsigned int minimumSize,
     const double maximumRelativeSize
@@ -121,7 +123,7 @@ namespace tbmr
   void Extract_tbmr
   (
     const image::Image<unsigned char> & ima,
-    std::vector<features::AffinePointFeature> & features,
+    std::vector<features::AffineFeature> & features,
     Ordering cmp,
     const unsigned int minimumSize,
     const double maximumRelativeSize
@@ -286,14 +288,22 @@ namespace tbmr
         const double b = -i11/n * (imaAttribute[p].area-1)/4;
         const double c = i20/n * (imaAttribute[p].area-1)/4;
 
-        const features::AffinePointFeature affineFP (x, y, a, b, c);
+        double l1 = (a + c - std::sqrt(a * a + c * c + 4 * b * b - 2 * a * c)) / 2;
+        double l2 = (a + c + std::sqrt(a * a + c * c + 4 * b * b - 2 * a * c)) / 2;
+        l1 = 1.f / std::sqrt(l1);
+        l2 = 1.f / std::sqrt(l2);
 
         // Check feature validity  (avoid tiny and thick ellipses)
-        const double lMin = std::min(affineFP.l1(), affineFP.l2());
+        // TODO: make this a parameter of the algorithm!
+        const double lMin = std::min(l1, l2);
         if (lMin < 1.5)
           continue;
-        // TODO: delete the one that collide with the border !!
-        features.emplace_back(affineFP);
+
+        // TODO: delete the ones that collide with the border !!
+
+        const Mat2 M = (Mat2() << a, b, b, c).finished().pow(-0.5).eval();
+
+        features.emplace_back(x, y, M(0, 0), M(0, 1), M(1, 0), M(1, 1));
       }
     }
   }

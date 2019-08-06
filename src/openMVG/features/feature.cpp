@@ -95,71 +95,44 @@ float getCoterminalAngle(float angle)
   return angle;
 }
 
-AffinePointFeature::AffinePointFeature
+AffineFeature::AffineFeature
 (
   float x,
   float y,
-  float a,
-  float b,
-  float c
-) : PointFeature(x, y), a_(a), b_(b), c_(c)
-{
-  l1_ = (a + c - std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2.f;
-  l2_ = (a + c + std::sqrt(a*a + c*c + 4 * b*b - 2 * a*c)) / 2.f;
-  l1_ = 1.f / std::sqrt(l1_);
-  l2_ = 1.f / std::sqrt(l2_);
+  float m11,
+  float m12,
+  float m21,
+  float m22
+) : PointFeature(x, y), M_((Mat2f() << m11, m12, m21, m22).finished())
+{}
 
-  phi_ = 0.f;
-  if (b == 0)
-  {
-    if (a > c)
-      phi_ = M_PI / 2; // else 0
-  }
-  else
-  {
-    const double t = std::atan(2 * b / (a - c));
-    if (a < c)
-      phi_ = t / 2;
-    else
-      phi_ = t / 2 + ((b > 0) ? -M_PI / 2 : M_PI / 2);
-  }
+bool AffineFeature::operator ==(const AffineFeature& b) const {
+  return (x() == b.x() && y() == b.y() && M() == b.M());
+};
 
-  if (l1_ > l2_)
-  {
-    std::swap(l1_, l2_);
-    phi_ = getCoterminalAngle(M_PI / 2 - phi_);
-  }
+bool AffineFeature::operator !=(const AffineFeature& rhs) const {
+  return !((*this) == rhs);
 }
 
-float AffinePointFeature::l1() const { return l1_; }
-float AffinePointFeature::l2() const { return l2_; }
-float AffinePointFeature::orientation() const { return phi_; }
+void AffineFeature::decompose(float& angleInRadians, float& majoraxissize, float& minoraxissize) const
+{
+  auto svd = M().jacobiSvd(Eigen::ComputeFullU);
+  angleInRadians = atan2(svd.matrixU()(1, 0), svd.matrixU()(0, 0));
+  majoraxissize = svd.singularValues().x();
+  minoraxissize = svd.singularValues().y();
+}
 
-bool AffinePointFeature::operator ==(const AffinePointFeature& b) const {
-  return ((x() == b.x()) && (y() == b.y() &&
-    (l1_ == b.l1_) && (l2_ == b.l2_) && (phi_ == b.phi_)));
-};
-
-bool AffinePointFeature::operator !=(const AffinePointFeature& rhs) const {
-  return !((*this) == rhs);
-};
-
-float AffinePointFeature::a() const { return a_; }
-float AffinePointFeature::b() const { return b_; }
-float AffinePointFeature::c() const { return c_; }
-
-
-std::ostream& operator<<(std::ostream& out, const AffinePointFeature& rhs)
+std::ostream& operator<<(std::ostream& out, const AffineFeature& rhs)
 {
   const PointFeature *pf = static_cast<const PointFeature*>(&rhs);
-  return out << *pf << " " << rhs.l1_ << " " << rhs.l2_ << " " << rhs.phi_
-    << " " << rhs.a_ << " " << rhs.b_ << " " << rhs.c_;
+  return out << *pf << " " << rhs.M_(0, 0) << " " << rhs.M_(0, 1) << " " << rhs.M_(1, 0)
+    << " " << rhs.M_(1, 1);
 }
 
-std::istream& operator>>(std::istream& in, AffinePointFeature& rhs)
+std::istream& operator>>(std::istream& in, AffineFeature& rhs)
 {
   PointFeature *pf = static_cast<PointFeature*>(&rhs);
-  return in >> *pf >> rhs.l1_ >> rhs.l2_ >> rhs.phi_ >> rhs.a_ >> rhs.b_ >> rhs.c_;
+  return in >> *pf >> rhs.M_(0, 0) >> rhs.M_(0, 1) >> rhs.M_(1, 0) >> rhs.M_(1, 1);
 }
 
 } // namespace features

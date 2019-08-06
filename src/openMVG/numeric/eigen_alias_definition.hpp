@@ -79,6 +79,12 @@ namespace openMVG
   using Quaternion = Eigen::Quaternion<double>;
 
   /// 3x3 matrix using double internal format
+  using Mat2 = Eigen::Matrix<double, 2, 2>;
+
+  /// 3x3 matrix using float internal format
+  using Mat2f = Eigen::Matrix<float, 2, 2>;
+
+  /// 3x3 matrix using double internal format
   using Mat3 = Eigen::Matrix<double, 3, 3>;
 
   /// 3x4 matrix using double internal format

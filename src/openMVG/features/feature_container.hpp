@@ -20,6 +20,9 @@ using PointFeatures = std::vector<PointFeature>;
 class SIOPointFeature;
 using SIOPointFeatures = std::vector<SIOPointFeature>;
 
+class AffineFeature;
+using AffineFeatures = std::vector<AffineFeature>;
+
 } // namespace features
 } // namespace openMVG
 

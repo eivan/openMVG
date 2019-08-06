@@ -37,18 +37,13 @@ template <typename Image>
 void NormalizePatch
 (
   const Image & src_img ,
-  const AffinePointFeature & feat ,
+  const AffineFeature & feat ,
   const int patch_size ,
   Image & out_patch
 )
 {
   // Mapping function
-  Eigen::Matrix<double,2,2> A;
-  A << feat.a(), feat.b(),
-       feat.b(), feat.c();
-
-  // Inverse square root
-  A = A.pow( -0.5 );
+  Mat2 A = feat.M().cast<double>();
 
   const float sc = 2.f * 3.f / static_cast<float>(patch_size);
   A = A * sc;
@@ -85,8 +80,8 @@ void NormalizePatch
 void Extract_MSER
 (
   const Image<unsigned char> & img,
-  std::vector<features::AffinePointFeature> & feats_dark,
-  std::vector<features::AffinePointFeature> & feats_bright
+  std::vector<features::AffineFeature> & feats_dark,
+  std::vector<features::AffineFeature> & feats_bright
 )
 {
   using namespace openMVG::features::MSER;
@@ -104,7 +99,9 @@ void Extract_MSER
       regs[i].FitEllipse( a, b, c );
       double x, y;
       regs[i].FitEllipse( x, y );
-      feats_bright.emplace_back(x, y, a, b, c);
+
+      const Mat2 M = (Mat2() << a, b, b, c).finished().pow(-0.5).eval();
+      feats_bright.emplace_back(x, y, M(0, 0), M(0, 1), M(1, 0), M(1, 1));
     }
   }
 
@@ -127,8 +124,8 @@ void Extract_MSER
 void Extract_TBMR
 (
   const Image<unsigned char> & img,
-  std::vector<features::AffinePointFeature> & feats_dark,
-  std::vector<features::AffinePointFeature> & feats_bright
+  std::vector<features::AffineFeature> & feats_dark,
+  std::vector<features::AffineFeature> & feats_bright
 )
 {
   tbmr::Extract_tbmr (img, feats_bright, std::less<uint8_t> (), 30);
@@ -163,7 +160,7 @@ int main(int argc, char **argv)
   Image<unsigned char> image;
   ReadImage(jpg_filename.c_str(), &image);
 
-  std::vector<features::AffinePointFeature> feats_dark, feats_bright;
+  std::vector<features::AffineFeature> feats_dark, feats_bright;
   if (sAffine_Detector_Method == "MSER")
   {
     Extract_MSER(image, feats_dark, feats_bright);
@@ -186,8 +183,12 @@ int main(int argc, char **argv)
     Image<unsigned char> Icpy (image);
     for (size_t i = 0; i < feats_bright.size(); ++i)
     {
-      const AffinePointFeature & fp = feats_bright[i];
-      DrawEllipse(fp.x(), fp.y(), fp.l1(), fp.l2(), 255, &Icpy, fp.orientation());
+      const AffineFeature & fp = feats_bright[i];
+
+      float angleInRadians, majoraxissize, minoraxissize;
+      fp.decompose(angleInRadians, majoraxissize, minoraxissize);
+
+      DrawEllipse(fp.x(), fp.y(), majoraxissize, minoraxissize, 255, &Icpy, angleInRadians);
       if (cmd.used('P'))
       {
         //-- Ellipse to square 41x41 patch normalization
@@ -208,8 +209,12 @@ int main(int argc, char **argv)
     Icpy = image;
     for (size_t i = 0; i < feats_dark.size(); ++i)
     {
-      const AffinePointFeature & fp = feats_dark[i];
-      DrawEllipse(fp.x(), fp.y(), fp.l1(), fp.l2(), 255, &Icpy, fp.orientation());
+      const AffineFeature & fp = feats_dark[i];
+
+      float angleInRadians, majoraxissize, minoraxissize;
+      fp.decompose(angleInRadians, majoraxissize, minoraxissize);
+
+      DrawEllipse(fp.x(), fp.y(), majoraxissize, minoraxissize, 255, &Icpy, angleInRadians);
     }
     os.str("");
     os << sAffine_Detector_Method << "_DARK_features.jpg";

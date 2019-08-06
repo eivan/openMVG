@@ -97,48 +97,50 @@ float getCoterminalAngle(float angle);
 
 /**
 * Base class for Affine "Point" features.
-* Add major & minor ellipse axis & orientation to the basis PointFeature.
+* Add a 2-by-2 matrix description of a Local Affine Frame to the basis PointFeature.
 */
-class AffinePointFeature : public PointFeature {
+class AffineFeature : public PointFeature {
 
-  friend std::ostream& operator<<(std::ostream& out, const AffinePointFeature& obj);
-  friend std::istream& operator>>(std::istream& in, AffinePointFeature& obj);
+  friend std::ostream& operator<<(std::ostream& out, const AffineFeature& obj);
+  friend std::istream& operator>>(std::istream& in, AffineFeature& obj);
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  virtual ~AffinePointFeature() = default;
+  virtual ~AffineFeature() = default;
 
-  AffinePointFeature
+  AffineFeature
   (
     float x = 0.0f,
     float y = 0.0f,
-    float a = 0.0f,
-    float b = 0.0f,
-    float c = 0.0f
+    float m11 = 1.0f,
+    float m12 = 0.0f,
+    float m21 = 0.0f,
+    float m22 = 1.0f
   );
-  float l1() const;
-  float l2() const;
-  float orientation() const;
 
-  bool operator ==(const AffinePointFeature& b) const;
+  bool operator ==(const AffineFeature& b) const;
 
-  bool operator !=(const AffinePointFeature& rhs) const;
+  bool operator !=(const AffineFeature& rhs) const;
 
   template<class Archive>
-  void serialize(Archive & ar)
+  void serialize(Archive& ar)
   {
-    ar (
+    ar(
       coords_(0), coords_(1),
-      l1_, l2_, phi_, a_, b_, c_);
+      M_(0, 0), M_(0, 1), M_(1, 0), M_(1, 1));
   }
 
-  float a() const;
-  float b() const;
-  float c() const;
+  // inner_points_of_the_affine_feature = { M * v | v \in unit_circle }
+  Mat2f& M() { return M_; }
+
+  // inner_points_of_the_affine_feature = { M * v | v \in unit_circle }
+  const Mat2f& M() const { return M_; }
+
+  void decompose(float& angleInRadians, float& majoraxissize, float& minoraxissize) const;
 
 protected:
-  float l1_, l2_, phi_, a_, b_, c_;
+  Mat2f M_;
 };
 
 /// Read feats from file
