@@ -27,6 +27,10 @@ option(OpenMVG_BUILD_GUI_SOFTWARES "Build OpenMVG GUI softwares (QT5)" ON)
 option(OpenMVG_BUILD_COVERAGE "Enable code coverage generation (gcc only)" OFF)
 option(OpenMVG_USE_OPENMP "Enable OpenMP parallelization" ON)
 # ==============================================================================
+# extra build options
+# ==============================================================================
+option(OpenMVG_USE_AS_SUBMODULE "OpenMVG is used as a submodule" OFF)
+# ==============================================================================
 # Opencv is not used by openMVG but some samples show how to use openCV
 #  and openMVG simultaneously
 # ==============================================================================
@@ -558,23 +562,25 @@ foreach(d ${OpenMVG_DEFINITIONS})
   list(APPEND OpenMVG_CFLAGS "-D${d}")
 endforeach()
 
-# Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
-# find_package() automatically. We configure that file so that we can put any
-# information we want in it, e.g. version numbers, include directories, etc.
-configure_file("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
-               "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)
-
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake"
-        DESTINATION share/openMVG/cmake)
-
-# ==============================================================================
-# UNINSTALL RULES
-# ==============================================================================
-
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY)
-
-add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+if (NOT OpenMVG_USE_AS_SUBMODULE)
+  # Create a OpenMVGConfig.cmake file. <name>Config.cmake files are searched by
+  # find_package() automatically. We configure that file so that we can put any
+  # information we want in it, e.g. version numbers, include directories, etc.
+  configure_file("${CMAKE_SOURCE_DIR}/cmakeFindModules/OpenMVGConfig.cmake.in"
+                 "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake" @ONLY)
+				 
+  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/OpenMVGConfig.cmake"
+          DESTINATION share/openMVG/cmake)
+  
+  # ==============================================================================
+  # UNINSTALL RULES
+  # ==============================================================================
+  
+  configure_file(
+      "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+      "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+      IMMEDIATE @ONLY)
+  
+  add_custom_target(uninstall
+      COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+endif (NOT OpenMVG_USE_AS_SUBMODULE)
