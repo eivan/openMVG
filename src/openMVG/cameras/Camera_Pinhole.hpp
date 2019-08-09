@@ -137,6 +137,7 @@ class Pinhole_Intrinsic : public IntrinsicBase
     {
       return (Kinv_ * points.colwise().homogeneous()).colwise().normalized();
     }  
+
     /**
     * @brief Get the gradient of the bearing vectors from image coordinates
     * @return gradient of the image to camera projection

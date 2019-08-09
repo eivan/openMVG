@@ -96,6 +96,35 @@ struct IntrinsicBase : public Clonable<IntrinsicBase>
   }
 
   /**
+  * @brief Compute the gradient of projection of a 3D point into the image plane
+  * (Apply disto (if any) and Intrinsics)
+  * @param X 3D-point to project on image plane
+  * @return Gradient of the 3D->2D projection
+  */
+  virtual Mat23 project_gradient(const Vec3& X,
+    const bool ignore_distortion = false) const {
+
+    const Vec2 hnorm = X.hnormalized();
+    const Mat23 hnorm_gradient = (Mat23() << 
+      1 / X.z(), 0, -hnorm.x() / X.z(),
+      0, 1 / X.z(),  -hnorm.y() / X.z()).finished();
+
+    if (this->have_disto() && !ignore_distortion)  // apply disto & intrinsics
+    {
+      return
+        this->cam2ima_gradient(this->add_disto(hnorm)) *
+        this->add_disto_gradient(hnorm) *
+        hnorm_gradient;
+    }
+    else  // apply intrinsics
+    {
+      return 
+        this->cam2ima_gradient(hnorm) * 
+        hnorm_gradient;
+    }
+  }
+
+  /**
   * @brief Compute the residual between the 3D projected point and an image observation
   * @param X 3d point to project on camera plane
   * @param x image observation

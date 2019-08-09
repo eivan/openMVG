@@ -100,11 +100,16 @@ inline bool Save_PLY
                 << pose.center()(0) << ' '
                 << pose.center()(1) << ' '
                 << pose.center()(2) << ' '
+                << -pose.rotation()(0, 2) << ' '
+                << -pose.rotation()(1, 2) << ' '
+                << -pose.rotation()(2, 2) << ' '
                 << "0 255 0\n";
             }
             else
             {
               stream.write( reinterpret_cast<const char*> ( pose.center().data() ), sizeof( Vec3 ) );
+              const Vec3 n = -pose.rotation().col(2);
+              stream.write( reinterpret_cast<const char*> ( n.data() ), sizeof( Vec3 ) );
               stream.write( reinterpret_cast<const char*> ( Vec3uc(0, 255, 0).data() ), sizeof( Vec3uc ) );
             }
           }
@@ -120,11 +125,16 @@ inline bool Save_PLY
                   << prior->pose_center_(0) << ' '
                   << prior->pose_center_(1) << ' '
                   << prior->pose_center_(2) << ' '
+                  << -prior->pose_rotation_(0, 2) << ' '
+                  << -prior->pose_rotation_(1, 2) << ' '
+                  << -prior->pose_rotation_(2, 2) << ' '
                   << "0 0 255\n";
               }
               else
               {
                 stream.write( reinterpret_cast<const char*> ( prior->pose_center_.data() ), sizeof( Vec3 ) );
+                const Vec3 n = -prior->pose_rotation_.col(2);
+                stream.write( reinterpret_cast<const char*> ( n.data() ), sizeof( Vec3 ) );
                 stream.write( reinterpret_cast<const char*> ( Vec3uc(0, 0, 255).data() ), sizeof( Vec3uc ) );
               }
             }
