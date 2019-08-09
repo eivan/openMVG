@@ -132,6 +132,23 @@ using class_type = Intrinsic_Spherical;
   }
 
   /**
+  * @brief Get the gradient of the bearing vectors from image coordinates
+  * @return gradient of the image to camera projection
+  */
+  virtual Mat32 gradient(const Vec2& uv) const override {
+
+    const double lon = uv.x() * 2 * M_PI, lat = -uv.y() * 2 * M_PI;
+
+    auto pipi = M_PI * 2;
+    auto slat = std::sin(lat), slon = std::sin(lon), clat = std::cos(lat),
+      clon = std::cos(lon);
+
+    return (Mat32() << -pipi * slat * slon, pipi * clat * clon, -pipi * clat, 0,
+      -pipi * slat * clon, -pipi * clat * slon)
+      .finished();
+  }
+
+  /**
   * @brief Compute projection of a 3D point into the image plane
   * (Apply disto (if any) and Intrinsics)
   * @param pt3D 3D-point to project on image plane
@@ -180,6 +197,53 @@ using class_type = Intrinsic_Spherical;
   * @return Distorted pixel
   */
   virtual Vec2 get_d_pixel(const Vec2 &p) const override { return p; }
+
+  /**
+  * @brief Compute gradient of cam2ima
+  * @param p Camera plane point
+  * @return Gradient of cam2ima
+  */
+  virtual Mat2 cam2ima_gradient(const Vec2& p) const override {
+    const double size(std::max(w(), h()));
+    return Vec2(size, size).asDiagonal();
+  }
+
+  /**
+  * @brief Compute gradient of ima2cam
+  * @param p Camera plane point
+  * @return Gradient of ima2cam
+  */
+  virtual Mat2 ima2cam_gradient(const Vec2& p) const override {
+    const double size(std::max(w(), h()));
+    return Vec2(1 / size, 1 / size).asDiagonal();
+  }
+
+  /**
+  * @brief Compute gradient of add_disto
+  * @param p Camera plane point
+  * @return Gradient of add_disto
+  */
+  virtual Mat2 add_disto_gradient(const Vec2& p) const override {
+    return Mat2::Identity();
+  }
+
+  /**
+  * @brief Compute gradient of remove_disto
+  * @param p Camera plane point
+  * @return Gradient of remove_disto
+  */
+  virtual Mat2 remove_disto_gradient(const Vec2& p) const override {
+    return Mat2::Identity();
+  }
+
+  /**
+  * @brief Return the gradient of get_d_pixel
+  * @param p Input pixel
+  * @return Gradient of get_d_pixel
+  */
+  virtual Mat2 get_d_pixel_gradient(const Vec2& p) const override {
+    return Mat2::Identity();
+  }
 
   /**
   * @brief Normalize a given unit pixel error to the camera plane

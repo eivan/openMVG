@@ -192,6 +192,37 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
     }
 
     /**
+    * @brief Return the gradient of get_d_pixel
+    * @param p Input pixel
+    * @return Gradient of get_d_pixel
+    */
+    virtual Mat2 get_d_pixel_gradient(const Vec2& p) const override {
+      const Vec2 c = ima2cam(p);
+      return cam2ima_gradient(add_disto(c))
+        * add_disto_gradient(c)
+        * ima2cam_gradient(p);
+    }
+
+    /**
+    * @brief Compute gradient of add_disto
+    * @param p Camera plane point
+    * @return Gradient of add_disto
+    */
+    virtual Mat2 add_disto_gradient(const Vec2& p) const override {
+      return Mat2::Identity() + distoFunction_gradient(params_, p);
+    }
+
+    /**
+    * @brief Compute gradient of remove_disto
+    * @param p Camera plane point
+    * @return Gradient of remove_disto
+    */
+    virtual Mat2 remove_disto_gradient(const Vec2& p) const override {
+      // using the multivariate inverse function theorem:
+      return add_disto_gradient(remove_disto(p)).inverse();
+    }
+
+    /**
     * @brief Serialization out
     * @param ar Archive
     */
@@ -233,6 +264,26 @@ class Pinhole_Intrinsic_Brown_T2 : public Pinhole_Intrinsic
       const double t_x = t2 * ( r2 + 2 * p( 0 ) * p( 0 ) ) + 2 * t1 * p( 0 ) * p( 1 );
       const double t_y = t1 * ( r2 + 2 * p( 1 ) * p( 1 ) ) + 2 * t2 * p( 0 ) * p( 1 );
       return { p( 0 ) * k_diff + t_x, p( 1 ) * k_diff + t_y};
+    }
+
+    static Mat2 distoFunction_gradient(const std::vector<double>& params,
+      const Vec2& p) {
+      const double k1 = params[0], k2 = params[1], k3 = params[2],
+        t1 = params[3], t2 = params[4];
+      const double r2 = p(0) * p(0) + p(1) * p(1);
+      const double r4 = r2 * r2;
+      const double r6 = r4 * r2;
+      const double k_diff = (k1 * r2 + k2 * r4 + k3 * r6);
+      const double t_x = t2 * (r2 + 2 * p(0) * p(0)) + 2 * t1 * p(0) * p(1);
+      const double t_y = t1 * (r2 + 2 * p(1) * p(1)) + 2 * t2 * p(0) * p(1);
+
+      const Vec2 k_diff_grad =
+        2 * (3 * k3 * r4 + 2 * k2 + k1) * p;
+
+      return (Mat2::Identity() * k_diff + p * k_diff_grad.transpose()) +
+        (Mat2() << 2 * t1 * p.y() + 6 * t2 * p.x(), 2 * t2 * p.y() + 2 * t1 * p.x(),
+          2 * t2 * p.y() + 2 * t1 * p.x(), 6 * t1 * p.y() + 2 * t2 * p.x())
+        .finished();
     }
 };
 

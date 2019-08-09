@@ -217,6 +217,61 @@ class Pinhole_Intrinsic_Fisheye : public Pinhole_Intrinsic
     }
 
     /**
+    * @brief Return the gradient of get_d_pixel
+    * @param p Input pixel
+    * @return Gradient of get_d_pixel
+    */
+    virtual Mat2 get_d_pixel_gradient(const Vec2& p) const override {
+      const Vec2 c = ima2cam(p);
+      return cam2ima_gradient(add_disto(c))
+        * add_disto_gradient(c)
+        * ima2cam_gradient(p);
+    }
+
+    /**
+    * @brief Compute gradient of add_disto
+    * @param p Camera plane point
+    * @return Gradient of add_disto
+    */
+    virtual Mat2 add_disto_gradient(const Vec2& p) const override {
+      const double eps = 1e-8;
+      const double k1 = params_[0], k2 = params_[1], k3 = params_[2],
+        k4 = params_[3];
+      const double r = std::hypot(p(0), p(1));
+      const double theta = std::atan(r);
+      const double theta2 = theta * theta, theta3 = theta2 * theta,
+        theta4 = theta2 * theta2, theta5 = theta4 * theta,
+        theta6 = theta3 * theta3, theta7 = theta6 * theta,
+        theta8 = theta4 * theta4, theta9 = theta8 * theta;
+      const double theta_dist =
+        theta + k1 * theta3 + k2 * theta5 + k3 * theta7 + k4 * theta9;
+      const double inv_r = r > eps ? 1.0 / r : 1.0;
+      const double cdist = r > eps ? theta_dist * inv_r : 1.0;
+
+      if (r > eps) {
+        auto tmp =
+          -k4 * theta9 / (r * r) + (9 * k4 * theta8 / r + 7 * k3 * theta6 +
+            5 * k2 * theta5 + 3 * k1 * theta2 + 1) /
+            (r * r + 1);
+
+        return Mat2::Identity() * cdist + (tmp / r) * p * p.transpose();
+      }
+      else {
+        return Mat2::Identity();
+      }
+    }
+
+    /**
+    * @brief Compute gradient of remove_disto
+    * @param p Camera plane point
+    * @return Gradient of remove_disto
+    */
+    virtual Mat2 remove_disto_gradient(const Vec2& p) const override {
+      // using the multivariate inverse function theorem:
+      return add_disto_gradient(remove_disto(p)).inverse();
+    }
+
+    /**
     * @brief Serialization out
     * @param ar Archive
     */

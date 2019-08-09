@@ -90,6 +90,12 @@ namespace openMVG
   /// 3x4 matrix using double internal format
   using Mat34 = Eigen::Matrix<double, 3, 4>;
 
+  /// 3x2 matrix using double internal format
+  using Mat32 = Eigen::Matrix<double, 3, 2>;
+
+  /// 2x3 matrix using double internal format
+  using Mat23 = Eigen::Matrix<double, 2, 3>;
+
   /// 2d vector using double internal format
   using Vec2 = Eigen::Vector2d;
 

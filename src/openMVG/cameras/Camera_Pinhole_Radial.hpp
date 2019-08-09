@@ -239,6 +239,15 @@ class Pinhole_Intrinsic_Radial_K1 : public Pinhole_Intrinsic
     }
 
     /**
+    * @brief Return the gradient of get_d_pixel
+    * @param p Input pixel
+    * @return Gradient of get_d_pixel
+    */
+    virtual Mat2 get_d_pixel_gradient(const Vec2& p) const {
+      return Mat2::Identity();
+    }
+
+    /**
     * @brief Serialization out
     * @param ar Archive
     */
@@ -445,6 +454,48 @@ class Pinhole_Intrinsic_Radial_K3 : public Pinhole_Intrinsic
     Vec2 get_d_pixel( const Vec2& p ) const override
     {
       return cam2ima( add_disto( ima2cam( p ) ) );
+    }
+
+    /**
+    * @brief Return the gradient of get_d_pixel
+    * @param p Input pixel
+    * @return Gradient of get_d_pixel
+    */
+    virtual Mat2 get_d_pixel_gradient(const Vec2& p) const override {
+      const Vec2 c = ima2cam(p);
+      return cam2ima_gradient(add_disto(c))
+        * add_disto_gradient(c)
+        * ima2cam_gradient(p);
+    }
+
+    /**
+    * @brief Compute gradient of add_disto
+    * @param p Camera plane point
+    * @return Gradient of add_disto
+    */
+    virtual Mat2 add_disto_gradient(const Vec2& p) const override {
+      const double k1 = params_[0];
+
+      const double& x = p(0) * p(0);
+      const double& y = p(1) * p(1);
+      const double x2 = p(0) * p(0);
+      const double y2 = p(1) * p(1);
+      const double r2 = x2 + y2;
+      const double r_coeff = (1. + k1 * r2);
+
+      return (Mat2() << k1 * r2 + 2 * k1 * x2 + 1, 2 * k1 * x * y,
+        2 * k1 * x * y, k1 * r2 + 2 * k1 * y2 + 1)
+        .finished();
+    }
+
+    /**
+    * @brief Compute gradient of remove_disto
+    * @param p Camera plane point
+    * @return Gradient of remove_disto
+    */
+    virtual Mat2 remove_disto_gradient(const Vec2& p) const override {
+      // using the multivariate inverse function theorem:
+      return add_disto_gradient(remove_disto(p)).inverse();
     }
 
     /**
