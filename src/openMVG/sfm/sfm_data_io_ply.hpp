@@ -94,22 +94,22 @@ inline bool Save_PLY
           if (sfm_data.IsPoseAndIntrinsicDefined(view.second.get()))
           {
             const geometry::Pose3 pose = sfm_data.GetPoseOrDie(view.second.get());
+            const Vec3 f = pose.rotation().row(2);
             if (b_write_in_ascii)
             {
               stream
                 << pose.center()(0) << ' '
                 << pose.center()(1) << ' '
                 << pose.center()(2) << ' '
-                << -pose.rotation()(0, 2) << ' '
-                << -pose.rotation()(1, 2) << ' '
-                << -pose.rotation()(2, 2) << ' '
+                << f.x() << ' '
+                << f.y() << ' '
+                << f.z() << ' '
                 << "0 255 0\n";
             }
             else
             {
               stream.write( reinterpret_cast<const char*> ( pose.center().data() ), sizeof( Vec3 ) );
-              const Vec3 n = -pose.rotation().col(2);
-              stream.write( reinterpret_cast<const char*> ( n.data() ), sizeof( Vec3 ) );
+              stream.write( reinterpret_cast<const char*> ( f.data() ), sizeof( Vec3 ) );
               stream.write( reinterpret_cast<const char*> ( Vec3uc(0, 255, 0).data() ), sizeof( Vec3uc ) );
             }
           }
@@ -119,22 +119,22 @@ inline bool Save_PLY
           {
             if (prior->b_use_pose_center_)
             {
+              const Vec3 f = prior->pose_rotation_.row(2);
               if (b_write_in_ascii)
               {
                 stream
                   << prior->pose_center_(0) << ' '
                   << prior->pose_center_(1) << ' '
                   << prior->pose_center_(2) << ' '
-                  << -prior->pose_rotation_(0, 2) << ' '
-                  << -prior->pose_rotation_(1, 2) << ' '
-                  << -prior->pose_rotation_(2, 2) << ' '
+                  << f.x() << ' '
+                  << f.y() << ' '
+                  << f.z() << ' '
                   << "0 0 255\n";
               }
               else
               {
                 stream.write( reinterpret_cast<const char*> ( prior->pose_center_.data() ), sizeof( Vec3 ) );
-                const Vec3 n = -prior->pose_rotation_.col(2);
-                stream.write( reinterpret_cast<const char*> ( n.data() ), sizeof( Vec3 ) );
+                stream.write( reinterpret_cast<const char*> ( f.data() ), sizeof( Vec3 ) );
                 stream.write( reinterpret_cast<const char*> ( Vec3uc(0, 0, 255).data() ), sizeof( Vec3uc ) );
               }
             }

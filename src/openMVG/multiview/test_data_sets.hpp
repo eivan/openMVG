@@ -45,7 +45,9 @@ struct NViewDataSet {
   std::vector<Vec3> _t;   // Translation.
   std::vector<Vec3> _C;   // Camera centers.
   Mat3X _X;          // 3D points.
+  Mat3X _Ns;         // Normals corresp. to points
   std::vector<Mat2X> _x;  // Projected points; may have noise added.
+  std::vector<std::vector<Mat2>> _M;  // Projected LAF shapes; may have noise added.
   std::vector<Vecu>  _x_ids;// Indexes of points corresponding to the projections
 
   size_t _n;  // Actual number of cameras.
@@ -76,6 +78,11 @@ struct nViewDatasetConfigurator
 NViewDataSet NRealisticCamerasRing(size_t nviews, size_t npoints,
                                    const nViewDatasetConfigurator &
                                      config = nViewDatasetConfigurator());
+
+NViewDataSet NRealisticLowFOVCameras(size_t nviews, size_t npoints,
+  double trajectoryLength = 0.0, double trajectoryJitter = 0.1,
+  const nViewDatasetConfigurator&
+  config = nViewDatasetConfigurator());
 
 /// Place cameras on cardiod shape with point in the center
 NViewDataSet NRealisticCamerasCardioid(size_t nviews, size_t npoints,

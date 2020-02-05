@@ -162,6 +162,20 @@ Vec2 Project(const Mat34 &P, const Vec3 &X) {
   return Vec3(P * X.homogeneous()).hnormalized();
 }
 
+Mat23 Project_gradient(const Mat34& P, const Vec3& X) {
+  Vec3 Y = P * X.homogeneous();
+  const auto& s = Y.z();
+  return (P.topLeftCorner<2, 3>() - (Y.head<2>() / s) * P.bottomLeftCorner<1,3>()) / s;
+}
+
+Mat23 Project_gradientK(const Mat3& K, const Vec3& X) {
+  Vec2 hnorm = X.hnormalized();
+  Mat23 hnorm_gradient = (Mat23() <<
+    1 / X.z(), 0, -hnorm.x() / X.z(),
+    0, 1 / X.z(), -hnorm.y() / X.z()).finished();
+  return K.topLeftCorner<2, 2>() * hnorm_gradient;
+}
+
 void Project(const Mat34 &P, const Mat3X &X, Mat2X *x) {
   x->resize(2, X.cols());
   for (size_t c = 0; c < static_cast<size_t>(X.cols()); ++c) {

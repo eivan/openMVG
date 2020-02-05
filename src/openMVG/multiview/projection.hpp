@@ -84,6 +84,16 @@ double Depth( const Mat3 &R, const Vec3 &t, const Vec3 &X );
 Vec2 Project( const Mat34 &P, const Vec3 &X );
 
 /**
+ * @brief TODO
+ * @param P
+ * @param X
+ * @return
+ */
+Mat23 Project_gradient(const Mat34& P, const Vec3& X);
+
+Mat23 Project_gradientK(const Mat3& K, const Vec3& X);
+
+/**
 * @brief Compute P*[X|1.0] for the X list of point (3D point)
 * @param P Camera projection matrix
 * @param X Input 3d points

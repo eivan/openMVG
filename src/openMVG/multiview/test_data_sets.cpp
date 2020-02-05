@@ -42,6 +42,83 @@ nViewDatasetConfigurator::nViewDatasetConfigurator(int fx, int fy,
   _jitter_amount(jitter_amount)
 {}
 
+
+NViewDataSet NRealisticLowFOVCameras(size_t nviews, size_t npoints,
+  double trajectoryLength, double trajectoryJitter,
+  const nViewDatasetConfigurator& config)
+{
+  //-- Setup a camera circle rig.
+  NViewDataSet d;
+  d._n = nviews;
+  d._K.resize(nviews);
+  d._R.resize(nviews);
+  d._t.resize(nviews);
+  d._C.resize(nviews);
+  d._x.resize(nviews);
+  d._M.resize(nviews);
+  d._x_ids.resize(nviews);
+
+  d._X.resize(3, npoints);
+  d._X.setRandom();
+  d._X *= 0.6;
+
+  d._Ns.resize(3, npoints);
+  d._Ns.setRandom();
+  d._Ns.colwise().normalize();
+
+  Vecu all_point_ids(npoints);
+  for (size_t j = 0; j < npoints; ++j)
+    all_point_ids[j] = j;
+
+  std::vector<Mat32> Nullspaces;
+  Nullspaces.reserve(npoints);
+  for (int j = 0; j < npoints; ++j) {
+    Nullspaces.emplace_back(
+      d._Ns.col(j).jacobiSvd(Eigen::ComputeFullU).matrixU().block<3, 2>(0, 1));
+  }
+
+  Vec3 camera_dir;
+  camera_dir.setRandom();
+  camera_dir.normalize();
+
+  for (size_t i = 0; i < nviews; ++i) {
+    Vec3 camera_center, t, jitterDir, jitterPos, lookdir;
+
+    const double theta = i * 2 * M_PI / nviews;
+    //-- Circle equation
+    //camera_center << sin(theta), 0.0, cos(theta); // Y axis UP
+    //camera_center *= config._dist;
+    camera_center = camera_dir * (config._dist + trajectoryLength * static_cast<double>(i) / (nviews-1));
+    jitterPos.setRandom();
+    jitterPos *= trajectoryJitter;
+    camera_center += jitterPos;
+    d._C[i] = camera_center;
+
+    jitterDir.setRandom();
+    jitterDir *= config._jitter_amount / camera_center.norm();
+    lookdir = -camera_center + jitterDir;
+
+    d._K[i] << config._fx, 0, config._cx,
+      0, config._fy, config._cy,
+      0, 0, 1;
+    d._R[i] = LookAt(lookdir);  // Y axis UP
+    d._t[i] = -d._R[i] * camera_center; // [t]=[-RC] Cf HZ.
+    d._x[i] = Project(d.P(i), d._X);
+
+    d._M[i].reserve(npoints);
+    const Mat34 P = d.P(i);
+    for (int j = 0; j < npoints; ++j) {
+      d._M[i].emplace_back(
+        //Project_gradientK(d._K[i], d._X.col(j)) * d._R[i] * Nullspaces[j]);
+        Project_gradient(P, d._X.col(j)) * Nullspaces[j]);
+
+    }
+
+    d._x_ids[i] = all_point_ids;
+  }
+  return d;
+}
+
 NViewDataSet NRealisticCamerasRing(size_t nviews, size_t npoints,
                                    const nViewDatasetConfigurator & config)
 {
@@ -53,15 +130,27 @@ NViewDataSet NRealisticCamerasRing(size_t nviews, size_t npoints,
   d._t.resize(nviews);
   d._C.resize(nviews);
   d._x.resize(nviews);
+  d._M.resize(nviews);
   d._x_ids.resize(nviews);
 
   d._X.resize(3, npoints);
   d._X.setRandom();
   d._X *= 0.6;
 
+  d._Ns.resize(3, npoints);
+  d._Ns.setRandom();
+  d._Ns.colwise().normalize();
+
   Vecu all_point_ids(npoints);
   for (size_t j = 0; j < npoints; ++j)
     all_point_ids[j] = j;
+
+  std::vector<Mat32> Nullspaces;
+  Nullspaces.reserve(npoints);
+  for (int j = 0; j < npoints; ++j) {
+    Nullspaces.emplace_back(
+      d._Ns.col(j).jacobiSvd(Eigen::ComputeFullU).matrixU().block<3, 2>(0, 1));
+  }
 
   for (size_t i = 0; i < nviews; ++i) {
     Vec3 camera_center, t, jitter, lookdir;
@@ -82,6 +171,16 @@ NViewDataSet NRealisticCamerasRing(size_t nviews, size_t npoints,
     d._R[i] = LookAt(lookdir);  // Y axis UP
     d._t[i] = -d._R[i] * camera_center; // [t]=[-RC] Cf HZ.
     d._x[i] = Project(d.P(i), d._X);
+    
+    d._M[i].reserve(npoints);
+    const Mat34 P = d.P(i);
+    for (int j = 0; j < npoints; ++j) {
+      d._M[i].emplace_back(
+        //Project_gradientK(d._K[i], d._X.col(j)) * d._R[i] * Nullspaces[j]);
+        Project_gradient(P, d._X.col(j)) * Nullspaces[j]);
+
+    }
+
     d._x_ids[i] = all_point_ids;
   }
   return d;
